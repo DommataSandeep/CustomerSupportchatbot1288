@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>E-commerce Chatbot</title>
+    <style>
+        body { font-family: Arial; background: #f4f4f4; padding: 20px; }
+        #chatbox { width: 500px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .message { margin-bottom: 10px; }
+        .bot { color: blue; }
+        .user { color: green; }
+    </style>
+</head>
+<body>
+    <div id="chatbox">
+        <div id="messages"></div>
+        <input type="text" id="user-input" placeholder="Ask something..." style="width: 80%;">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const input = document.getElementById("user-input");
+            const msg = input.value.trim();
+            if (!msg) return;
+
+            const messages = document.getElementById("messages");
+            messages.innerHTML += `<div class='message user'>You: ${msg}</div>`;
+            input.value = "";
+
+            let responseText = "Sorry, I didn’t understand that.";
+
+            if (msg.toLowerCase().includes("top") && msg.toLowerCase().includes("products")) {
+                const res = await fetch("http://localhost:8000/top-products");
+                const data = await res.json();
+                responseText = "Top 5 products:
+" + data.map(p => `• ${p.product_name} (${p.units_sold} sold)`).join("<br>");
+            } else if (msg.toLowerCase().includes("order")) {
+                const idMatch = msg.match(/\d+/);
+                if (idMatch) {
+                    const res = await fetch(`http://localhost:8000/order-status/${idMatch[0]}`);
+                    const data = await res.json();
+                    if (data.error) {
+                        responseText = data.error;
+                    } else {
+                        responseText = `Order ${data.order_id} for ${data.customer_name} is ${data.status}.`;
+                    }
+                }
+            } else if (msg.toLowerCase().includes("stock")) {
+                const words = msg.split(" ");
+                const productName = words.slice(words.indexOf("of") + 1).join(" ");
+                const res = await fetch(`http://localhost:8000/stock/${encodeURIComponent(productName)}`);
+                const data = await res.json();
+                if (data.error) {
+                    responseText = data.error;
+                } else {
+                    responseText = `There are ${data.stock} ${data.product} in stock.`;
+                }
+            }
+
+            messages.innerHTML += `<div class='message bot'>Bot: ${responseText}</div>`;
+        }
+    </script>
+</body>
+</html>

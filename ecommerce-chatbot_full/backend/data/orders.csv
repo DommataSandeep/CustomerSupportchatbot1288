@@ -1,0 +1,6 @@
+order_id,customer_name,status
+12345,Alice,Delivered
+12346,Bob,Shipped
+12347,Charlie,Processing
+12348,Daisy,Cancelled
+12349,Eve,Delivered
